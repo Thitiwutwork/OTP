@@ -3,12 +3,12 @@ import OtpMailboxPage from './components/OtpMailboxPage';
 import Toast from './components/Toast';
 import AdminDashboard from './components/AdminDashboard';
 import AdminLogin from './components/AdminLogin';
-import { checkAdminSession, touchAdminSession, adminLogout } from './services/adminService';
+import { checkAdminSession, touchAdminSession, adminLogout, createAdminSession } from './services/adminService';
 
 export default function App() {
   const [toast, setToast] = useState({ isVisible: false, message: '', icon: '✨' });
 
-  // Read secret admin entrance from URL (?key=backendscrect or /backendscrect)
+  // Read secret admin entrance from URL (?key=backendscrect or /backendscrect or /admin)
   const checkInitialAdmin = () => {
     try {
       if (checkAdminSession()) return true;
@@ -19,6 +19,7 @@ export default function App() {
       const secretKey = 'backendscrect';
       const altSecretKey = 'backendsecret';
 
+      // 1. Direct secret in URL -> Auto login directly!
       const hasSecretParam = 
         params.get('key')?.toLowerCase() === secretKey ||
         params.get('key')?.toLowerCase() === altSecretKey ||
@@ -36,8 +37,13 @@ export default function App() {
         pathname.startsWith(`/${altSecretKey}/`);
 
       if (hasSecretParam || hasSecretPath) {
-        // Clean URL immediately so the secret key disappears from browser bar
+        createAdminSession(); // Auto-login immediately
         window.history.replaceState({}, '', '/');
+        return true;
+      }
+
+      // 2. Standard admin entrance -> Shows AdminLogin modal
+      if (params.get('admin') === 'true' || params.has('admin') || pathname.startsWith('/admin')) {
         return true;
       }
 
@@ -158,7 +164,17 @@ export default function App() {
       <footer className="border-t border-sky-100 bg-white/80 py-6 text-center text-xs text-gray-500">
         <div className="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>© 2026 NAME — ระบบอัตโนมัติ 24 ชม.</span>
-          <span className="text-gray-400">ให้บริการกล่องข้อความและรับรหัส OTP อย่างปลอดภัย</span>
+          <div className="flex items-center gap-3 text-gray-400">
+            <span>ให้บริการกล่องข้อความและรับรหัส OTP อย่างปลอดภัย</span>
+            <button
+              type="button"
+              onClick={() => setIsAdminMode(true)}
+              className="text-gray-300 hover:text-sky-600 transition-colors cursor-pointer text-xs p-0.5 rounded-sm"
+              title="เข้าสู่ระบบจัดการแอดมิน"
+            >
+              🔒
+            </button>
+          </div>
         </div>
       </footer>
 

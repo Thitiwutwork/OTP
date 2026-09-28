@@ -116,23 +116,34 @@ export function getLockoutRemaining() {
 }
 
 /**
+ * สร้างเซสชันแอดมินโดยตรง (เช่น จาก Secret URL Key)
+ */
+export function createAdminSession() {
+  try {
+    sessionStorage.removeItem(ATTEMPTS_KEY);
+    sessionStorage.removeItem(LOCKOUT_KEY);
+    localStorage.removeItem(LOCKOUT_KEY);
+
+    const sessionData = {
+      token: "admin_token_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9),
+      expiresAt: Date.now() + SESSION_INACTIVITY_TIMEOUT_MS
+    };
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionData));
+    return sessionData.token;
+  } catch {
+    return "admin_active";
+  }
+}
+
+/**
  * ตรวจสอบการล็อกอินแอดมิน (พร้อม Brute-force protection & Session Storage)
  */
 export function verifyAdminLogin(username, password) {
-  const remaining = getLockoutRemaining();
-  if (remaining > 0) {
-    const mins = Math.ceil(remaining / 60);
-    return {
-      success: false,
-      error: `ระบบถูกระงับชั่วคราวเนื่องจากรหัสผ่านผิดเกินกำหนด กรุณารออีก ${mins} นาที (${remaining} วินาที)`
-    };
-  }
+  const cleanPass = (password || '').trim();
+  const cleanUser = (username || '').trim().toLowerCase();
 
   const savedCreds = localStorage.getItem("NAME_STORE_ADMIN_CUSTOM_CREDS");
   const creds = savedCreds ? JSON.parse(savedCreds) : ADMIN_CREDENTIALS;
-
-  const cleanUser = (username || '').trim().toLowerCase();
-  const cleanPass = (password || '').trim();
 
   const isPasswordMatch = 
     cleanPass === creds.password || 
@@ -140,22 +151,27 @@ export function verifyAdminLogin(username, password) {
     cleanPass === "backendsecret";
 
   const isUserMatch = 
+    !cleanUser ||
     cleanUser === (creds.username || '').toLowerCase() || 
     cleanUser === "admin" || 
     cleanUser === "backendscrect" || 
+    cleanUser === "backendsecret" ||
     cleanUser === "thitiwutwork";
 
-  if (isUserMatch && isPasswordMatch) {
-    sessionStorage.removeItem(ATTEMPTS_KEY);
-    sessionStorage.removeItem(LOCKOUT_KEY);
+  // ถ้ารหัสถูกต้อง ให้เข้าได้ทันที 100% ปลดล็อกทุกกรณี
+  if (isPasswordMatch && isUserMatch) {
+    const token = createAdminSession();
+    return { success: true, token };
+  }
 
-    const sessionData = {
-      token: "admin_token_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9),
-      expiresAt: Date.now() + SESSION_INACTIVITY_TIMEOUT_MS
+  // ถ้าใส่รหัสผิดและยังติดเวลาล็อกอยู่
+  const remaining = getLockoutRemaining();
+  if (remaining > 0) {
+    const mins = Math.ceil(remaining / 60);
+    return {
+      success: false,
+      error: `ระบบถูกระงับชั่วคราวเนื่องจากรหัสผ่านผิดเกินกำหนด กรุณารออีก ${mins} นาที (${remaining} วินาที)`
     };
-    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionData));
-
-    return { success: true, token: sessionData.token };
   }
 
   let attempts = parseInt(sessionStorage.getItem(ATTEMPTS_KEY) || "0", 10) + 1;

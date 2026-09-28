@@ -28,22 +28,21 @@ export default function AdminLogin({ onLoginSuccess, onCancel }) {
     e.preventDefault();
     setError("");
 
-    if (lockoutSecs > 0) {
-      setError(`ระบบกำลังถูกระงับการเข้าสู่ระบบ กรุณารออีก ${lockoutSecs} วินาที`);
-      return;
-    }
+    const effectiveUsername = username.trim() || "admin";
+    const effectivePassword = password.trim();
 
-    if (!username.trim() || !password.trim()) {
-      setError("กรุณากรอกชื่อผู้ใช้และรหัสผ่านให้ครบถ้วน");
+    if (!effectivePassword) {
+      setError("กรุณากรอกรหัสผ่านเข้าหลังบ้าน");
       return;
     }
 
     setIsLoading(true);
     setTimeout(() => {
-      const result = verifyAdminLogin(username.trim(), password.trim());
+      const result = verifyAdminLogin(effectiveUsername, effectivePassword);
       setIsLoading(false);
 
       if (result.success) {
+        setLockoutSecs(0);
         onLoginSuccess();
       } else {
         const remaining = getLockoutRemaining();
@@ -52,7 +51,7 @@ export default function AdminLogin({ onLoginSuccess, onCancel }) {
         }
         setError(result.error || "รหัสผ่านไม่ถูกต้อง");
       }
-    }, 400);
+    }, 200);
   };
 
   return (
@@ -124,9 +123,7 @@ export default function AdminLogin({ onLoginSuccess, onCancel }) {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="admin"
-                disabled={lockoutSecs > 0}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all disabled:opacity-50"
-                required
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
               />
             </div>
           </div>
@@ -143,9 +140,8 @@ export default function AdminLogin({ onLoginSuccess, onCancel }) {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="กรอกรหัสผ่าน"
-                disabled={lockoutSecs > 0}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all disabled:opacity-50"
+                placeholder="กรอกรหัสผ่าน (backendscrect)"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
                 required
               />
             </div>
@@ -154,13 +150,11 @@ export default function AdminLogin({ onLoginSuccess, onCancel }) {
           <div className="pt-2">
             <button
               type="submit"
-              disabled={isLoading || lockoutSecs > 0}
+              disabled={isLoading}
               className="w-full py-3 px-4 bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-700 hover:from-sky-600 hover:to-indigo-800 text-white font-medium text-sm rounded-xl shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition-all transform active:scale-[0.99] disabled:opacity-60 cursor-pointer"
             >
               {isLoading ? (
                 <span>กำลังตรวจสอบความปลอดภัย...</span>
-              ) : lockoutSecs > 0 ? (
-                <span>รอเวลาปลดล็อก ({lockoutSecs}s)...</span>
               ) : (
                 <>
                   <span>เข้าสู่ระบบแดชบอร์ด</span>
