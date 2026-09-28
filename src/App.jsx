@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Lock } from 'lucide-react';
 import OtpMailboxPage from './components/OtpMailboxPage';
 import Toast from './components/Toast';
 import AdminDashboard from './components/AdminDashboard';
@@ -9,11 +8,40 @@ import { checkAdminSession, touchAdminSession, adminLogout } from './services/ad
 export default function App() {
   const [toast, setToast] = useState({ isVisible: false, message: '', icon: '✨' });
 
-  // Read initial email or admin route from URL query if present
+  // Read secret admin entrance from URL (?key=backendscrect or /backendscrect)
   const checkInitialAdmin = () => {
     try {
+      if (checkAdminSession()) return true;
+
       const params = new URLSearchParams(window.location.search);
-      return params.get('admin') === 'true' || window.location.pathname.startsWith('/admin');
+      const pathname = window.location.pathname.toLowerCase();
+
+      const secretKey = 'backendscrect';
+      const altSecretKey = 'backendsecret';
+
+      const hasSecretParam = 
+        params.get('key')?.toLowerCase() === secretKey ||
+        params.get('key')?.toLowerCase() === altSecretKey ||
+        params.get('secret')?.toLowerCase() === secretKey ||
+        params.get('secret')?.toLowerCase() === altSecretKey ||
+        params.get('admin')?.toLowerCase() === secretKey ||
+        params.get('admin')?.toLowerCase() === altSecretKey ||
+        params.has(secretKey) ||
+        params.has(altSecretKey);
+
+      const hasSecretPath = 
+        pathname === `/${secretKey}` ||
+        pathname === `/${altSecretKey}` ||
+        pathname.startsWith(`/${secretKey}/`) ||
+        pathname.startsWith(`/${altSecretKey}/`);
+
+      if (hasSecretParam || hasSecretPath) {
+        // Clean URL immediately so the secret key disappears from browser bar
+        window.history.replaceState({}, '', '/');
+        return true;
+      }
+
+      return false;
     } catch {
       return false;
     }
@@ -58,21 +86,12 @@ export default function App() {
     };
   }, [isAdminMode, isAdminLoggedIn]);
 
-  // Sync admin mode to URL query
-  const handleOpenAdmin = () => {
-    setIsAdminLoggedIn(checkAdminSession());
-    setIsAdminMode(true);
-    const url = new URL(window.location.href);
-    url.searchParams.set('admin', 'true');
-    window.history.pushState({}, '', url);
-  };
-
   const handleExitAdmin = () => {
     adminLogout();
     setIsAdminLoggedIn(false);
     setIsAdminMode(false);
     // Securely clear query parameter from browser address bar and history
-    window.history.replaceState({}, '', window.location.pathname.startsWith('/admin') ? '/' : window.location.pathname);
+    window.history.replaceState({}, '', '/');
   };
 
   const showToast = (message, icon = '✨') => {
@@ -139,17 +158,7 @@ export default function App() {
       <footer className="border-t border-sky-100 bg-white/80 py-6 text-center text-xs text-gray-500">
         <div className="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>© 2026 NAME — ระบบอัตโนมัติ 24 ชม.</span>
-          <div className="flex items-center gap-3 text-gray-400">
-            <span>ให้บริการกล่องข้อความและรับรหัส OTP อย่างปลอดภัย</span>
-            <button
-              type="button"
-              onClick={handleOpenAdmin}
-              className="hover:text-sky-600 transition-colors p-1 rounded-md text-gray-300 hover:bg-sky-50 cursor-pointer"
-              title="เข้าสู่ระบบจัดการแอดมิน"
-            >
-              <Lock className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          <span className="text-gray-400">ให้บริการกล่องข้อความและรับรหัส OTP อย่างปลอดภัย</span>
         </div>
       </footer>
 
