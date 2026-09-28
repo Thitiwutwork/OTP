@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Lock } from 'lucide-react';
 import OtpMailboxPage from './components/OtpMailboxPage';
 import Toast from './components/Toast';
 import AdminDashboard from './components/AdminDashboard';
@@ -138,7 +139,17 @@ export default function App() {
       <footer className="border-t border-sky-100 bg-white/80 py-6 text-center text-xs text-gray-500">
         <div className="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>© 2026 NAME — ระบบอัตโนมัติ 24 ชม.</span>
-          <span className="text-gray-400">ให้บริการกล่องข้อความและรับรหัส OTP อย่างปลอดภัย</span>
+          <div className="flex items-center gap-3 text-gray-400">
+            <span>ให้บริการกล่องข้อความและรับรหัส OTP อย่างปลอดภัย</span>
+            <button
+              type="button"
+              onClick={handleOpenAdmin}
+              className="hover:text-sky-600 transition-colors p-1 rounded-md text-gray-300 hover:bg-sky-50 cursor-pointer"
+              title="เข้าสู่ระบบจัดการแอดมิน"
+            >
+              <Lock className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </footer>
 
