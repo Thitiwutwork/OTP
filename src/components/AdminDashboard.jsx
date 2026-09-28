@@ -600,7 +600,7 @@ export default function AdminDashboard({ onExitToClient }) {
               </div>
               <div>
                 <span className="font-bold text-lg bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight block leading-tight">
-                  NAME STORE
+                  NAME
                 </span>
                 <span className="text-[10px] text-sky-700 font-bold tracking-wider uppercase">
                   Admin Console

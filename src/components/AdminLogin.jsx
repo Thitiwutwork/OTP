@@ -82,7 +82,7 @@ export default function AdminLogin({ onLoginSuccess, onCancel }) {
             เข้าสู่ระบบจัดการแอดมิน
           </h2>
           <p className="text-xs text-gray-500 mt-1 font-semibold tracking-wide">
-            NAME STORE OTP & MAILBOX CONSOLE
+            NAME OTP & MAILBOX CONSOLE
           </p>
           <div className="inline-flex items-center gap-1.5 mt-2.5 px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-semibold rounded-full">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />

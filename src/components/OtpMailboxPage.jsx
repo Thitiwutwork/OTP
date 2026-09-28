@@ -1867,19 +1867,6 @@ export default function OtpMailboxPage({ initialEmail = '', onSwitchTab, onShowT
         </div>
       )}
 
-      {/* Guide & Help Card */}
-      <div className="bg-sky-50/60 rounded-3xl p-5 border border-sky-100 text-xs text-gray-600 space-y-2">
-        <h4 className="font-bold text-gray-800 flex items-center gap-1.5">
-          <Sparkles className="w-4 h-4 text-sky-600" />
-          <span>คำแนะนำการใช้งานหน้ารับ OTP</span>
-        </h4>
-        <ul className="list-disc list-inside space-y-1 text-[11px] sm:text-xs text-gray-500 leading-relaxed">
-          <li>บริการนี้สร้างขึ้นเพื่อให้คุณรับรหัสยืนยัน OTP ได้โดยตรงบนเว็บ NAME STORE โดยไม่ต้องเปิดไปเว็บอื่น</li>
-          <li>เมื่อคุณสั่งซื้อสินค้าประเภท OTP หรือได้รับอีเมลจากระบบ ให้นำอีเมลนั้นมากรอกในช่องค้นหาด้านบน</li>
-          <li>ระบบจะดึงข้อความที่ส่งมายังอีเมลดังกล่าวและแสดงเฉพาะรหัส OTP ให้คุณคัดลอกได้อย่างรวดเร็ว</li>
-          <li>หากมีปัญหาในการรับรหัส สามารถติดต่อแอดมินผ่าน LINE ร้านค้าได้ตลอดเวลาทำการครับ</li>
-        </ul>
-      </div>
 
       {/* PIN Unlock Modal */}
       {isPinModalOpen && (

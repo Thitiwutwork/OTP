@@ -113,7 +113,7 @@ export default function App() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-base sm:text-lg tracking-tight bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 bg-clip-text text-transparent font-['Prompt']">
-                  NAME STORE
+                  NAME
                 </span>
                 <span className="text-[10px] bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded-md">
                   Mailbox OTP
@@ -137,7 +137,7 @@ export default function App() {
       {/* Footer */}
       <footer className="border-t border-sky-100 bg-white/80 py-6 text-center text-xs text-gray-500">
         <div className="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>© 2026 NAME STORE — ระบบอัตโนมัติ 24 ชม.</span>
+          <span>© 2026 NAME — ระบบอัตโนมัติ 24 ชม.</span>
           <span className="text-gray-400">ให้บริการกล่องข้อความและรับรหัส OTP อย่างปลอดภัย</span>
         </div>
       </footer>
