@@ -225,6 +225,17 @@ export default {
         console.error(`FAILED to save to Supabase: Status ${saveRes.status} - ${errBody}`);
       }
 
+      // ระบบทำความสะอาดอัตโนมัติ (Auto-Prune): ลบอีเมลที่เก่าเกิน 7 วัน เพื่อไม่ให้เปลืองพื้นที่ Supabase
+      try {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        fetch(`${supabaseUrl}/rest/v1/emails?received_at=lt.${encodeURIComponent(sevenDaysAgo)}`, {
+          method: "DELETE",
+          headers
+        }).catch(() => {});
+      } catch (cleanErr) {
+        // Non-blocking
+      }
+
     } catch (err) {
       console.error("FATAL Email Worker Error:", err);
     }
