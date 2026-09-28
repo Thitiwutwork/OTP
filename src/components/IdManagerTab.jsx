@@ -32,9 +32,15 @@ import {
   STATUS_OPTIONS 
 } from "../services/idManagerService";
 
+const DEFAULT_INVITE_CODE = "PJXK9MWQ";
+
 export default function IdManagerTab({ onShowToast }) {
   const [items, setItems] = useState(getIdList);
   const [search, setSearch] = useState("");
+  const [inviteCode, setInviteCode] = useState(() => {
+    return localStorage.getItem("THEHOF_INVITE_CODE") || DEFAULT_INVITE_CODE;
+  });
+  const [copiedCode, setCopiedCode] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [copiedId, setCopiedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -112,6 +118,16 @@ export default function IdManagerTab({ onShowToast }) {
     }
   };
 
+  // Copy Invite Code PJXK9MWQ
+  const handleCopyInviteCode = () => {
+    navigator.clipboard.writeText(inviteCode);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
+    if (onShowToast) {
+      onShowToast(`คัดลอกโค้ด "${inviteCode}" สำเร็จ`, "🎁");
+    }
+  };
+
   // Copy ID and Quick Open thehof.gg
   const handleCopyAndRegister = (username) => {
     navigator.clipboard.writeText(username);
@@ -119,10 +135,11 @@ export default function IdManagerTab({ onShowToast }) {
     setTimeout(() => setCopiedId(null), 2500);
 
     if (onShowToast) {
-      onShowToast(`คัดลอก ID "${username}" แล้ว! กำลังเปิดหน้า thehof.gg`, "⚡");
+      onShowToast(`คัดลอก ID "${username}" แล้ว! (โค้ด: ${inviteCode})`, "⚡");
     }
 
-    window.open("https://member.thehof.gg/register", "_blank", "noopener,noreferrer");
+    const regUrl = `https://member.thehof.gg/register?invite_code=${encodeURIComponent(inviteCode)}`;
+    window.open(regUrl, "_blank", "noopener,noreferrer");
   };
 
   // Just copy ID
@@ -200,12 +217,29 @@ export default function IdManagerTab({ onShowToast }) {
           <p className="text-sky-100 text-xs sm:text-sm mt-1 max-w-xl font-light leading-relaxed">
             สามารถคลิกที่ช่อง <b>ไอเทม / หมายเหตุ</b> หรือ <b>TR</b> เพื่อพิมพ์แก้ไขได้ทันที พร้อมปุ่มคัดลอกและเปิดเว็บ thehof.gg
           </p>
+
+          {/* Invite Code PJXK9MWQ Badge */}
+          <div className="mt-4 flex flex-wrap items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-3.5 py-2 rounded-2xl w-fit">
+            <span className="text-xs text-sky-100 font-medium">โค้ดคำเชิญ (Invite Code):</span>
+            <span className="font-mono font-black text-sm text-yellow-300 tracking-wider bg-black/30 px-3 py-0.5 rounded-xl border border-yellow-300/40">
+              {inviteCode}
+            </span>
+            <button
+              type="button"
+              onClick={handleCopyInviteCode}
+              className="px-2.5 py-1 bg-yellow-400 hover:bg-yellow-300 text-slate-900 text-xs font-bold rounded-xl shadow-xs flex items-center gap-1 transition-all cursor-pointer transform active:scale-95"
+              title="คัดลอกโค้ด PJXK9MWQ"
+            >
+              {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-800" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copiedCode ? "คัดลอกแล้ว!" : "คัดลอกโค้ด"}</span>
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             type="button"
-            onClick={() => window.open("https://member.thehof.gg/register", "_blank")}
+            onClick={() => window.open(`https://member.thehof.gg/register?invite_code=${encodeURIComponent(inviteCode)}`, "_blank")}
             className="px-4 py-2.5 bg-white text-blue-700 hover:bg-sky-50 text-xs font-bold rounded-2xl shadow-md flex items-center gap-1.5 transition-all cursor-pointer transform active:scale-95"
           >
             <ExternalLink className="w-4 h-4" />
@@ -565,6 +599,16 @@ export default function IdManagerTab({ onShowToast }) {
                           >
                             <ExternalLink className="w-3 h-3" />
                             <span>สมัคร thehof</span>
+                          </button>
+
+                          {/* Quick Copy Code Button */}
+                          <button
+                            type="button"
+                            onClick={handleCopyInviteCode}
+                            className="px-2 py-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-800 text-[11px] font-semibold rounded-xl border border-yellow-200 transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1"
+                            title="คัดลอกโค้ด PJXK9MWQ"
+                          >
+                            <span>🎁 โค้ด</span>
                           </button>
 
                           {/* Edit Details Button */}
