@@ -16,11 +16,15 @@ import {
   Sparkles,
   ArrowUpDown,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  X,
+  Save
 } from "lucide-react";
 import { 
   getIdList, 
   updateIdStatus, 
+  updateIdField,
+  updateIdDetails,
   addNewId, 
   deleteId, 
   resetToDefault, 
@@ -35,6 +39,13 @@ export default function IdManagerTab({ onShowToast }) {
   const [copiedId, setCopiedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 25;
+
+  // Inline editing state: { id, field } where field is 'note' or 'tr'
+  const [editingCell, setEditingCell] = useState(null);
+  const [cellTempText, setCellTempText] = useState("");
+
+  // Edit Modal State
+  const [editingItem, setEditingItem] = useState(null);
 
   // Add new modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -82,6 +93,25 @@ export default function IdManagerTab({ onShowToast }) {
     }
   };
 
+  // Start inline editing
+  const handleStartInlineEdit = (item, field) => {
+    setEditingCell({ id: item.id, field });
+    setCellTempText(item[field] || "");
+  };
+
+  // Save inline editing
+  const handleSaveInlineEdit = () => {
+    if (!editingCell) return;
+    const { id, field } = editingCell;
+    const updated = updateIdField(id, field, cellTempText);
+    setItems(updated);
+    setEditingCell(null);
+    setCellTempText("");
+    if (onShowToast) {
+      onShowToast("บันทึกข้อมูลเรียบร้อยแล้ว", "💾");
+    }
+  };
+
   // Copy ID and Quick Open thehof.gg
   const handleCopyAndRegister = (username) => {
     navigator.clipboard.writeText(username);
@@ -120,6 +150,18 @@ export default function IdManagerTab({ onShowToast }) {
     }
   };
 
+  // Save full edit modal
+  const handleSaveEditModal = (e) => {
+    e.preventDefault();
+    if (!editingItem) return;
+    const updated = updateIdDetails(editingItem.id, editingItem);
+    setItems(updated);
+    setEditingItem(null);
+    if (onShowToast) {
+      onShowToast(`บันทึกข้อมูล ID "${editingItem.username}" สำเร็จ`, "✅");
+    }
+  };
+
   // Delete ID
   const handleDelete = (id, username) => {
     if (window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบ ID "${username}"?`)) {
@@ -155,13 +197,14 @@ export default function IdManagerTab({ onShowToast }) {
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
             จัดการข้อมูล ID พร้อมสถานะ
           </h2>
-          <p className="text-sky-100 text-xs sm:text-sm mt-1 max-w-xl font-light">
-            ข้อมูลนำเข้าจากไฟล์ Excel ทั้งหมด 247 บัญชี เชื่อมต่อหน้าสมัคร thehof.gg พร้อมปุ่มคัดลอกและเปิดเว็บในคลิกเดียว
+          <p className="text-sky-100 text-xs sm:text-sm mt-1 max-w-xl font-light leading-relaxed">
+            สามารถคลิกที่ช่อง <b>ไอเทม / หมายเหตุ</b> หรือ <b>TR</b> เพื่อพิมพ์แก้ไขได้ทันที พร้อมปุ่มคัดลอกและเปิดเว็บ thehof.gg
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
           <button
+            type="button"
             onClick={() => window.open("https://member.thehof.gg/register", "_blank")}
             className="px-4 py-2.5 bg-white text-blue-700 hover:bg-sky-50 text-xs font-bold rounded-2xl shadow-md flex items-center gap-1.5 transition-all cursor-pointer transform active:scale-95"
           >
@@ -170,6 +213,7 @@ export default function IdManagerTab({ onShowToast }) {
           </button>
 
           <button
+            type="button"
             onClick={exportToCsv}
             className="px-4 py-2.5 bg-white/20 hover:bg-white/30 text-white text-xs font-semibold rounded-2xl backdrop-blur-md flex items-center gap-1.5 transition-all cursor-pointer transform active:scale-95"
             title="ดาวน์โหลดไฟล์ Excel (.csv รองรับภาษาไทย 100%)"
@@ -179,11 +223,12 @@ export default function IdManagerTab({ onShowToast }) {
           </button>
 
           <button
+            type="button"
             onClick={() => setIsAddModalOpen(true)}
             className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-2xl shadow-md flex items-center gap-1.5 transition-all cursor-pointer transform active:scale-95"
           >
             <Plus className="w-4 h-4" />
-            <span>เพิ่ม ID</span>
+            <span>เพิ่ม ID ใหม่</span>
           </button>
         </div>
       </div>
@@ -327,10 +372,20 @@ export default function IdManagerTab({ onShowToast }) {
               <tr>
                 <th className="py-3.5 px-4 w-12 text-center">#</th>
                 <th className="py-3.5 px-4">ชื่อ ID</th>
-                <th className="py-3.5 px-4">สถานะ (คลิกเพื่อเปลี่ยน)</th>
-                <th className="py-3.5 px-4">ไอเทม / หมายเหตุ</th>
-                <th className="py-3.5 px-4 w-24">TR</th>
-                <th className="py-3.5 px-4 text-center w-48">เครื่องมือด่วน (Fast Actions)</th>
+                <th className="py-3.5 px-4">สถานะ (Dropdown)</th>
+                <th className="py-3.5 px-4">
+                  <div className="flex items-center gap-1.5">
+                    <span>ไอเทม / หมายเหตุ</span>
+                    <span className="text-[10px] text-indigo-500 font-normal normal-case">(คลิกพิมพ์ได้เลย)</span>
+                  </div>
+                </th>
+                <th className="py-3.5 px-4 w-28">
+                  <div className="flex items-center gap-1">
+                    <span>TR</span>
+                    <span className="text-[10px] text-indigo-500 font-normal normal-case">(คลิกพิมพ์)</span>
+                  </div>
+                </th>
+                <th className="py-3.5 px-4 text-center w-52">จัดการ & สมัคร (Actions)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-sky-50 text-gray-700 font-['Prompt']">
@@ -345,6 +400,8 @@ export default function IdManagerTab({ onShowToast }) {
                 paginatedItems.map((item, index) => {
                   const globalIndex = (currentPage - 1) * pageSize + index + 1;
                   const isCopied = copiedId === item.username;
+                  const isEditingNote = editingCell?.id === item.id && editingCell?.field === "note";
+                  const isEditingTr = editingCell?.id === item.id && editingCell?.field === "tr";
 
                   return (
                     <tr 
@@ -392,25 +449,107 @@ export default function IdManagerTab({ onShowToast }) {
                         </select>
                       </td>
 
-                      {/* Note / Item */}
+                      {/* Note / Item (Click-to-Edit Inline) */}
                       <td className="py-3 px-4">
-                        {item.note ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-100 text-xs font-medium">
-                            {item.note}
-                          </span>
+                        {isEditingNote ? (
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="text"
+                              autoFocus
+                              value={cellTempText}
+                              onChange={(e) => setCellTempText(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveInlineEdit();
+                                if (e.key === "Escape") setEditingCell(null);
+                              }}
+                              className="px-2.5 py-1 bg-white border-2 border-blue-500 rounded-lg text-xs text-gray-900 focus:outline-hidden w-full max-w-xs shadow-xs"
+                              placeholder="ระบุไอเทมหรือหมายเหตุ..."
+                            />
+                            <button
+                              type="button"
+                              onClick={handleSaveInlineEdit}
+                              className="p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer shrink-0"
+                              title="บันทึก"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingCell(null)}
+                              className="p-1.5 bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer shrink-0"
+                              title="ยกเลิก"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         ) : (
-                          <span className="text-gray-300 text-xs">-</span>
+                          <div 
+                            onClick={() => handleStartInlineEdit(item, "note")}
+                            className="group inline-flex items-center gap-1.5 cursor-pointer py-1 px-2 rounded-lg hover:bg-sky-50 transition-colors"
+                            title="คลิกเพื่อแก้ไขไอเทม / หมายเหตุ"
+                          >
+                            {item.note ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-100 text-xs font-medium">
+                                {item.note}
+                              </span>
+                            ) : (
+                              <span className="text-gray-300 text-xs italic group-hover:text-sky-600">
+                                + เพิ่มหมายเหตุ
+                              </span>
+                            )}
+                            <Edit3 className="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100 text-sky-600 transition-opacity" />
+                          </div>
                         )}
                       </td>
 
-                      {/* TR */}
+                      {/* TR (Click-to-Edit Inline) */}
                       <td className="py-3 px-4">
-                        {item.tr ? (
-                          <span className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-0.5 rounded-md">
-                            {item.tr}
-                          </span>
+                        {isEditingTr ? (
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="text"
+                              autoFocus
+                              value={cellTempText}
+                              onChange={(e) => setCellTempText(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveInlineEdit();
+                                if (e.key === "Escape") setEditingCell(null);
+                              }}
+                              className="px-2 py-1 bg-white border-2 border-blue-500 rounded-lg text-xs text-gray-900 focus:outline-hidden w-20 shadow-xs"
+                              placeholder="เช่น หมด"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleSaveInlineEdit}
+                              className="p-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer shrink-0"
+                            >
+                              <Check className="w-3 h-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingCell(null)}
+                              className="p-1 bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer shrink-0"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
                         ) : (
-                          <span className="text-gray-300 text-xs">-</span>
+                          <div 
+                            onClick={() => handleStartInlineEdit(item, "tr")}
+                            className="group inline-flex items-center gap-1.5 cursor-pointer py-1 px-2 rounded-lg hover:bg-sky-50 transition-colors"
+                            title="คลิกเพื่อแก้ไข TR"
+                          >
+                            {item.tr ? (
+                              <span className="text-xs text-gray-600 font-mono bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200">
+                                {item.tr}
+                              </span>
+                            ) : (
+                              <span className="text-gray-300 text-xs italic group-hover:text-sky-600">
+                                + TR
+                              </span>
+                            )}
+                            <Edit3 className="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100 text-sky-600 transition-opacity" />
+                          </div>
                         )}
                       </td>
 
@@ -426,6 +565,16 @@ export default function IdManagerTab({ onShowToast }) {
                           >
                             <ExternalLink className="w-3 h-3" />
                             <span>สมัคร thehof</span>
+                          </button>
+
+                          {/* Edit Details Button */}
+                          <button
+                            type="button"
+                            onClick={() => setEditingItem({ ...item })}
+                            className="p-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 text-[11px] font-semibold rounded-xl border border-sky-200 transition-colors cursor-pointer"
+                            title="แก้ไขข้อมูลทั้งหมดของ ID นี้"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
                           </button>
 
                           {/* Quick Toggle to Sent */}
@@ -491,6 +640,88 @@ export default function IdManagerTab({ onShowToast }) {
         </div>
       </div>
 
+      {/* Edit Item Modal */}
+      {editingItem && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-sky-100 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900">แก้ไขข้อมูล ID: {editingItem.username}</h3>
+              <button
+                onClick={() => setEditingItem(null)}
+                className="text-gray-400 hover:text-gray-600 p-1 rounded-full cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditModal} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">ชื่อ ID</label>
+                <input
+                  type="text"
+                  value={editingItem.username}
+                  onChange={(e) => setEditingItem({ ...editingItem, username: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-mono focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">สถานะ</label>
+                <select
+                  value={editingItem.status}
+                  onChange={(e) => setEditingItem({ ...editingItem, status: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="ยังไม่ได้สมัคร">🔴 ยังไม่ได้สมัคร</option>
+                  <option value="ยังไม่ส่ง">🟡 ยังไม่ส่ง</option>
+                  <option value="ส่งแล้ว">🟢 ส่งแล้ว</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">ไอเทม / หมายเหตุ</label>
+                <input
+                  type="text"
+                  value={editingItem.note || ""}
+                  onChange={(e) => setEditingItem({ ...editingItem, note: e.target.value })}
+                  placeholder="เช่น ปีกเทพ แบบใส่, รับโค้ดแล้ว"
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">TR</label>
+                <input
+                  type="text"
+                  value={editingItem.tr || ""}
+                  onChange={(e) => setEditingItem({ ...editingItem, tr: e.target.value })}
+                  placeholder="เช่น หมด หรือระบุจำนวน"
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingItem(null)}
+                  className="px-4 py-2 text-xs font-semibold text-gray-500 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>บันทึกข้อมูล</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Add New ID Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
@@ -507,7 +738,7 @@ export default function IdManagerTab({ onShowToast }) {
                   value={newUsername}
                   onChange={(e) => setNewUsername(e.target.value)}
                   placeholder="เช่น Sodapop248"
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white"
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-mono focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white"
                   required
                 />
               </div>
@@ -542,7 +773,7 @@ export default function IdManagerTab({ onShowToast }) {
                   type="text"
                   value={newTr}
                   onChange={(e) => setNewTr(e.target.value)}
-                  placeholder="เช่น หมด หรือค่าอื่นๆ"
+                  placeholder="เช่น หมด หรือระบุค่า"
                   className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white"
                 />
               </div>

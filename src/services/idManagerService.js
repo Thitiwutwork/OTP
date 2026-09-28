@@ -51,6 +51,41 @@ export function updateIdStatus(id, newStatus) {
   return updated;
 }
 
+export function updateIdField(id, field, value) {
+  const list = getIdList();
+  const updated = list.map((item) => {
+    if (item.id === id) {
+      return {
+        ...item,
+        [field]: typeof value === 'string' ? value.trim() : value,
+        updated_at: new Date().toISOString()
+      };
+    }
+    return item;
+  });
+  saveIdList(updated);
+  return updated;
+}
+
+export function updateIdDetails(id, { username, status, note, tr }) {
+  const list = getIdList();
+  const updated = list.map((item) => {
+    if (item.id === id) {
+      return {
+        ...item,
+        username: username ? username.trim() : item.username,
+        status: status || item.status,
+        note: typeof note === 'string' ? note.trim() : item.note,
+        tr: typeof tr === 'string' ? tr.trim() : item.tr,
+        updated_at: new Date().toISOString()
+      };
+    }
+    return item;
+  });
+  saveIdList(updated);
+  return updated;
+}
+
 export function batchUpdateIdStatus(ids, newStatus) {
   if (!ids || ids.length === 0) return getIdList();
   const idSet = new Set(ids);
