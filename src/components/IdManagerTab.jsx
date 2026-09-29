@@ -18,7 +18,8 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Save
+  Save,
+  Coins
 } from "lucide-react";
 import { 
   getIdList, 
@@ -60,13 +61,56 @@ export default function IdManagerTab({ onShowToast }) {
   const [newNote, setNewNote] = useState("");
   const [newTr, setNewTr] = useState("");
 
+  // Parse TR numerical or shorthand amount
+  const parseTrAmount = (trStr) => {
+    if (!trStr) return 0;
+    const s = String(trStr).trim().toLowerCase().replace(/,/g, '');
+    if (s === 'หมด' || s === '-' || s === '0') return 0;
+    if (s.endsWith('k')) {
+      const n = parseFloat(s.slice(0, -1));
+      return isNaN(n) ? 0 : n * 1000;
+    }
+    if (s.endsWith('m')) {
+      const n = parseFloat(s.slice(0, -1));
+      return isNaN(n) ? 0 : n * 1000000;
+    }
+    const n = parseFloat(s.replace(/[^0-9.]/g, ''));
+    return isNaN(n) ? 0 : n;
+  };
+
   // Statistics
   const stats = useMemo(() => {
     const total = items.length;
     const notRegistered = items.filter((i) => i.status === "ยังไม่ได้สมัคร").length;
     const pendingSend = items.filter((i) => i.status === "ยังไม่ส่ง").length;
     const sent = items.filter((i) => i.status === "ส่งแล้ว").length;
-    return { total, notRegistered, pendingSend, sent };
+
+    let totalTrSum = 0;
+    let withTrCount = 0;
+    let depletedTrCount = 0;
+
+    items.forEach((i) => {
+      const trStr = (i.tr || "").trim();
+      const val = parseTrAmount(trStr);
+      if (val > 0) {
+        totalTrSum += val;
+        withTrCount++;
+      } else if (trStr === "หมด" || trStr === "0") {
+        depletedTrCount++;
+      } else if (trStr && trStr !== "-") {
+        withTrCount++;
+      }
+    });
+
+    return { 
+      total, 
+      notRegistered, 
+      pendingSend, 
+      sent, 
+      totalTrSum, 
+      withTrCount, 
+      depletedTrCount 
+    };
   }, [items]);
 
   // Filtered and searched items
@@ -268,7 +312,9 @@ export default function IdManagerTab({ onShowToast }) {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        
+        {/* Card 1: ID ทั้งหมด */}
         <div 
           onClick={() => { setSelectedFilter("all"); setCurrentPage(1); }}
           className={`p-4 sm:p-5 rounded-3xl border transition-all cursor-pointer ${
@@ -282,6 +328,30 @@ export default function IdManagerTab({ onShowToast }) {
           <div className="text-[11px] text-gray-400 mt-1">รายการทั้งหมด</div>
         </div>
 
+        {/* Card 2: TR รวมทั้งหมด (Total TR) */}
+        <div 
+          className="p-4 sm:p-5 rounded-3xl border border-indigo-200 bg-gradient-to-br from-indigo-50/90 via-sky-50/60 to-white shadow-xs relative overflow-hidden"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-indigo-700 font-bold flex items-center gap-1.5">
+              <Coins className="w-4 h-4 text-amber-500" />
+              <span>TR รวมทั้งหมด</span>
+            </span>
+            <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full">
+              ยอดสะสม
+            </span>
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-indigo-950 mt-1 flex items-baseline gap-1">
+            <span>{stats.totalTrSum > 0 ? stats.totalTrSum.toLocaleString() : (stats.depletedTrCount > 0 ? "หมด" : "0")}</span>
+            {stats.totalTrSum > 0 && <span className="text-xs font-bold text-indigo-600">TR</span>}
+          </div>
+          <div className="text-[11px] text-indigo-600/90 mt-1 flex items-center justify-between">
+            <span>มี TR: <b>{stats.withTrCount}</b> ID</span>
+            <span>หมด: <b>{stats.depletedTrCount}</b> ID</span>
+          </div>
+        </div>
+
+        {/* Card 3: ยังไม่ได้สมัคร */}
         <div 
           onClick={() => { setSelectedFilter("ยังไม่ได้สมัคร"); setCurrentPage(1); }}
           className={`p-4 sm:p-5 rounded-3xl border transition-all cursor-pointer ${
@@ -298,6 +368,7 @@ export default function IdManagerTab({ onShowToast }) {
           <div className="text-[11px] text-rose-500 mt-1">ต้องสมัครสมาชิก</div>
         </div>
 
+        {/* Card 4: ยังไม่ส่ง */}
         <div 
           onClick={() => { setSelectedFilter("ยังไม่ส่ง"); setCurrentPage(1); }}
           className={`p-4 sm:p-5 rounded-3xl border transition-all cursor-pointer ${
@@ -314,6 +385,7 @@ export default function IdManagerTab({ onShowToast }) {
           <div className="text-[11px] text-amber-500 mt-1">รอดำเนินการส่ง</div>
         </div>
 
+        {/* Card 5: ส่งแล้ว */}
         <div 
           onClick={() => { setSelectedFilter("ส่งแล้ว"); setCurrentPage(1); }}
           className={`p-4 sm:p-5 rounded-3xl border transition-all cursor-pointer ${

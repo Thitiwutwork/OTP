@@ -12,8 +12,8 @@ export const INITIAL_ID_DATA = [
     "id": "id_2",
     "username": "Sodapop2",
     "status": "ส่งแล้ว",
-    "note": "หมด",
-    "tr": "",
+    "note": "",
+    "tr": "หมด",
     "updated_at": "2026-09-28T00:00:00.000Z"
   },
   {
@@ -28,32 +28,32 @@ export const INITIAL_ID_DATA = [
     "id": "id_4",
     "username": "Sodapop4",
     "status": "ส่งแล้ว",
-    "note": "หมด",
-    "tr": "",
+    "note": "",
+    "tr": "หมด",
     "updated_at": "2026-09-28T00:00:00.000Z"
   },
   {
     "id": "id_5",
     "username": "Sodapop5",
     "status": "ส่งแล้ว",
-    "note": "หมด",
-    "tr": "",
+    "note": "",
+    "tr": "หมด",
     "updated_at": "2026-09-28T00:00:00.000Z"
   },
   {
     "id": "id_6",
     "username": "Sodapop6",
     "status": "ส่งแล้ว",
-    "note": "หมด",
-    "tr": "",
+    "note": "",
+    "tr": "หมด",
     "updated_at": "2026-09-28T00:00:00.000Z"
   },
   {
     "id": "id_7",
     "username": "Sodapop7",
     "status": "ส่งแล้ว",
-    "note": "หมด",
-    "tr": "",
+    "note": "",
+    "tr": "หมด",
     "updated_at": "2026-09-28T00:00:00.000Z"
   },
   {
@@ -76,40 +76,40 @@ export const INITIAL_ID_DATA = [
     "id": "id_10",
     "username": "Sodapop10",
     "status": "ส่งแล้ว",
-    "note": "หมด",
-    "tr": "",
+    "note": "",
+    "tr": "หมด",
     "updated_at": "2026-09-28T00:00:00.000Z"
   },
   {
     "id": "id_11",
     "username": "Sodapop11",
     "status": "ส่งแล้ว",
-    "note": "หมด",
-    "tr": "",
+    "note": "",
+    "tr": "หมด",
     "updated_at": "2026-09-28T00:00:00.000Z"
   },
   {
     "id": "id_12",
     "username": "Sodapop12",
     "status": "ส่งแล้ว",
-    "note": "หมด",
-    "tr": "",
+    "note": "",
+    "tr": "หมด",
     "updated_at": "2026-09-28T00:00:00.000Z"
   },
   {
     "id": "id_13",
     "username": "Sodapop13",
     "status": "ส่งแล้ว",
-    "note": "หมด",
-    "tr": "",
+    "note": "",
+    "tr": "หมด",
     "updated_at": "2026-09-28T00:00:00.000Z"
   },
   {
     "id": "id_14",
     "username": "Sodapop14",
     "status": "ส่งแล้ว",
-    "note": "หมด",
-    "tr": "",
+    "note": "",
+    "tr": "หมด",
     "updated_at": "2026-09-28T00:00:00.000Z"
   },
   {

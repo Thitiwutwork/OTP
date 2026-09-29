@@ -1,6 +1,6 @@
 import { INITIAL_ID_DATA } from "../data/initialIdData";
 
-const STORAGE_KEY = "NAME_ID_MANAGER_ITEMS_V1";
+const STORAGE_KEY = "NAME_ID_MANAGER_ITEMS_V2";
 
 export const STATUS_OPTIONS = [
   { label: "ยังไม่ได้สมัคร", value: "ยังไม่ได้สมัคร", color: "bg-rose-50 text-rose-700 border-rose-200" },
