@@ -421,9 +421,9 @@ export async function createBatchMailboxes(addresses, pinCode = null, note = "")
  * ดึงรายการบัญชีเมลทั้งหมด (Mailboxes) - 100% Reliable
  */
 export async function fetchAllMailboxes(query = "") {
-  let list = getLocalMailboxes();
+  let list = getLocalMailboxes().filter((m) => !m.address?.startsWith("__"));
   try {
-    let url = `${BASE_URL}/rest/v1/mailboxes?select=id,address,pin_code,note,is_active,created_at&order=created_at.desc`;
+    let url = `${BASE_URL}/rest/v1/mailboxes?select=id,address,pin_code,note,is_active,created_at&address=not.ilike.__%&order=created_at.desc`;
     if (query && query.trim()) {
       const q = encodeURIComponent(`*${query.trim()}*`);
       url += `&or=(address.ilike.${q},note.ilike.${q})`;
@@ -433,8 +433,9 @@ export async function fetchAllMailboxes(query = "") {
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
+        const cleanData = data.filter((m) => !m.address?.startsWith("__"));
         const map = new Map();
-        data.forEach((m) => map.set(m.address.toLowerCase(), m));
+        cleanData.forEach((m) => map.set(m.address.toLowerCase(), m));
         list.forEach((m) => {
           if (!map.has(m.address.toLowerCase())) {
             map.set(m.address.toLowerCase(), m);
